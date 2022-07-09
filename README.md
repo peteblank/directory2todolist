@@ -1,0 +1,3 @@
+# directory2todolist
+
+I'm trying to a directory into an html list with checkmarks by turning the contents of the directory into a json etc...
