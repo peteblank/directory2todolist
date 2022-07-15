@@ -1,6 +1,16 @@
 <html>
     <head>
     <title></title>
+        <script>
+        var uploadField = document.getElementById("file");
+
+uploadField.onchange = function() {
+    if(this.files[0].size > 12200000){
+       alert("File is too big!");
+       this.value = "";
+    };
+};
+        </script>
     </head>
     <body>
         
@@ -10,13 +20,10 @@
       method="post"
     >
           <input type="file" name="myFile" accept=".zip"></input>
-            <input type="submit" value="upload" />
+            <input type="submit" value="upload" id="file" />
         </form>
       <ul>
-<li><a href=output7887.html>link</a></li>
-<li><a href=output8081.html>link</a></li>
-
-        
+   
       </ul>
     </body>
 </html>
