@@ -1,3 +1,2 @@
-heroku ps:scale web=2
-web:/bin/sh -c go\ run\ upload.go
-web:/bin/sh -c php\ -S\ localhost:80 
+web:go run upload.go
+web:php -S localhost:8080 
