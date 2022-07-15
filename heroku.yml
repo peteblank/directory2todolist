@@ -1,7 +1,0 @@
-build:
-  docker:
-    web: Dockerfile
-    worker: Dockerfile
-run:
-  web: php -S localhost:8080 
-  web: go run upload.go
