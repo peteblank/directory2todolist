@@ -1,2 +1,2 @@
-web:go run upload.go
+
 woker:php -S localhost:8080 
