@@ -52,10 +52,13 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Successfully Uploaded File\n")
 	value := strings.Split(tempFile.Name(), "temp-images\\")
 	fmt.Printf("   " + value[0] + "   ")
-	cmd := exec.Command("/usr/bin/unzip", value[0])
-	cmd.Run()
+	cmd := exec.Command("unzip", value[0])
+	err = cmd.Run()
+	if err != nil {
+		fmt.Printf("cmd.Run: %s failed:\n", err)
+	}
 	random := "output" + strconv.FormatInt(int64(rand.Intn(10000)), 10) + ".html"
-	cmd2 := exec.Command("/usr/bin/tree", "-H", handler.Filename, "-o", random)
+	cmd2 := exec.Command("tree", "-H", handler.Filename, "-o", random)
 	output, _ := cmd2.CombinedOutput()
 	fmt.Printf(string(output))
 	err2 := cmd2.Run()
