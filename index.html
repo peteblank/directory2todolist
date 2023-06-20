@@ -1,29 +1,24 @@
+<!DOCTYPE html>
 <html>
-    <head>
-    <title></title>
-        <script>
-        var uploadField = document.getElementById("file");
+<head>
+    <title>JSON to Table</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON to Table</h1>
+    <input type="file" id="fileInput" />
+    <br><br>
+    <table id="table"></table>
 
-uploadField.onchange = function() {
-    if(this.files[0].size > 12200000){
-       alert("File is too big!");
-       this.value = "";
-    };
-};
-        </script>
-    </head>
-    <body>
-        
-        <form
-      enctype="multipart/form-data"
-      action="http://localhost:8080/upload"
-      method="post"
-    >
-          <input type="file" name="myFile" accept=".zip"></input>
-            <input type="submit" value="upload" id="file" />
-        </form>
-      <ul>
-   
-      </ul>
-    </body>
+    <script src="checkmark.js">
+</script>
+</body>
 </html>
