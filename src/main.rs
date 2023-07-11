@@ -1,98 +1,67 @@
-extern crate serde;
-extern crate serde_json;
-
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
-
-#[derive(Debug, Serialize, Deserialize)]
-struct FileInfo {
-    path: String,
-    red: bool,
-    comment: Option<String>,
-}
+use std::path::PathBuf;
 
 fn main() -> io::Result<()> {
     // Read the current directory
     let current_dir = env::current_dir()?;
-    let files = walk_directory(&current_dir)?;
-
-    // Save file information as JSON
-    let json = serde_json::to_string(&files)?;
-    fs::write("file_info.json", json)?;
-
-    // Load the JSON file
-    let json_content = fs::read_to_string("file_info.json")?;
-    let mut loaded_files: Vec<FileInfo> = serde_json::from_str(&json_content)?;
-
-    // Display the file information
-    for (index, file) in loaded_files.iter().enumerate() {
-        let marked = if file.red { "✓" } else { " " };
-        let comment = if let Some(ref c) = file.comment {
-            format!("({})", c)
-        } else {
-            "".to_string()
-        };
-
-        println!("{:<4}{} {} {}", index + 1, marked, file.path, comment);
-    }
-
-    // Interactive interface to mark rows as red and add comments
-    loop {
-        print!("Enter the row number to mark as red (or 'q' to quit): ");
-        io::stdout().flush()?;
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-
-        let input = input.trim();
-        if input == "q" {
-            break;
-        }
-
-        if let Ok(row) = input.parse::<usize>() {
-            if let Some(file) = loaded_files.get_mut(row - 1) {
-                file.red = true;
-
-                print!("Enter a comment: ");
-                io::stdout().flush()?;
-                let mut comment = String::new();
-                io::stdin().read_line(&mut comment)?;
-                file.comment = Some(comment.trim().to_string());
+    let mut html = String::new();
+    html.push_str(r#"<style>li {display: flex; align-items: center;} input[type="text"] {margin-left: 8px;}</style>"#);
+    html.push_str(r#"<script>
+        window.addEventListener('load', () => {
+            const data = JSON.parse(localStorage.getItem('fileTreeState')) || {};
+            for (const [key, value] of Object.entries(data)) {
+                const el = document.querySelector(`[data-path="${key}"]`);
+                if (el) {
+                    el.querySelector('input[type="checkbox"]').checked = value.checked;
+                    el.querySelector('input[type="text"]').value = value.comment;
+                    el.style.backgroundColor = value.checked ? 'red' : '';
+                }
             }
-        }
-    }
+        });
 
-    // Save the updated file information as JSON
-    let updated_json = serde_json::to_string(&loaded_files)?;
-    fs::write("updated_file_info.json", updated_json)?;
+        function saveState() {
+            const data = {};
+            document.querySelectorAll('[data-path]').forEach(el => {
+                const path = el.getAttribute('data-path');
+                const checked = el.querySelector('input[type="checkbox"]').checked;
+                const comment = el.querySelector('input[type="text"]').value;
+                data[path] = { checked, comment };
+            });
+            localStorage.setItem('fileTreeState', JSON.stringify(data));
+        }
+    </script>"#);
+    html.push_str("<ul>\n");
+    walk_directory(&current_dir, &mut html)?;
+    html.push_str("</ul>\n");
+    html.push_str(r#"<button onclick="saveState()">Save</button>"#);
+
+    fs::write("file_tree.html", html)?;
 
     Ok(())
 }
 
-fn walk_directory(dir: &std::path::PathBuf) -> io::Result<Vec<FileInfo>> {
-    let mut file_info = vec![];
-
+fn walk_directory(dir: &PathBuf, html: &mut String) -> io::Result<()> {
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
         let metadata = entry.metadata()?;
 
+        let path_str = path.to_string_lossy().into_owned();
+        html.push_str(&format!(
+            r#"<li data-path="{}"><input type="checkbox" onchange="this.parentNode.style.backgroundColor=this.checked?'red':''">{}<input type="text"></li>"#,
+            path_str,
+            path.file_name().unwrap().to_string_lossy()
+        ));
+
         if metadata.is_dir() {
-            let sub_files = walk_directory(&path)?;
-            file_info.extend(sub_files);
-        } else {
-            let path_str = path.to_string_lossy().into_owned();
-            let file = FileInfo {
-                path: path_str,
-                red: false,
-                comment: None,
-            };
-            file_info.push(file);
+            html.push_str("<ul>\n");
+            walk_directory(&path, html)?;
+            html.push_str("</ul>\n");
         }
     }
 
-    Ok(file_info)
+    Ok(())
 }
 
